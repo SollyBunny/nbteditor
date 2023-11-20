@@ -1,3 +1,8 @@
+
+<meta charset="utf-8">
+
+<title> NBT Editor </title>
+
 <script src="https://unpkg.com/fflate@0.8.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.0/umd/index.js"></script>
 <script>
@@ -12,7 +17,6 @@
 <input type="file" id="nbt-file" name="NBT file" accept=".dat,.nbt">
 
 <style>
-
 	#nbt-viewer {
 		width: 100%;
 	}
@@ -22,6 +26,12 @@
 	}
 	#nbt-viewer .compound-children {
 		margin-left: 2em;
+		clip-path: rect(0 100% 0% 0);
+		transition: 0.2s ease clip-path;
+	}
+	#nbt-viewer .compound-children, #nbt-viewer {
+		display: grid;
+		grid-template-columns: min-content 1fr;
 	}
 </style>
 
