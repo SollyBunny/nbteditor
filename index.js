@@ -20,27 +20,55 @@ function nbtParseData(data) {
 async function nbtFileInput(event) {
 	const files = event.target.files;
 	if (files.length === 0) return;
-	let data = await files[0].arrayBuffer();
-	let nbt = await nbtParseData(data);
-	nbtViewerConstruct(eNbtViewer, nbt);
+	let data;
+	data = await files[0].arrayBuffer();
+	data = await nbtParseData(data);
+	window.data = data;
+	nbtViewerConstruct(eNbtViewer, undefined, {
+		type: "compound",
+		value: data.value
+	}, true);
+	
 }
 
-async function nbtViewerConstruct(parent, nbt) {
-	const el = document.createElement("div");
-	el.classList.add("")
-	{
+async function nbtViewerConstruct(parent, name, data) {
+	const root = name === undefined;
+	let el;
+	if (!root) {
 		const title = document.createElement("div");
-		title.textContent = nbt.name;
+		title.classList.add("title");
+		title.textContent = name;
 		el.appendChild(title);
 	}
 	{
-		const data = document.createElement("div");
-		if (isObject(nbt.value)) {
-			
+		let content;
+		switch (data.type) {
+			case "compound":
+				const children = document.createElement("div");
+				children.classList.add("compound-children");
+				if (root) {
+					for (const key in data.value) {
+						nbtViewerConstruct(children, key, data.value[key]);
+					}
+				} else {
+					content = document.createElement("button");
+					content.classList.add("compound");
+					content.textContent = "Click to drop down";
+					el.appendChild(content);
+					content.addEventListener("click", event => {
+						for (const key in data.value) {
+							nbtViewerConstruct(children, key, data.value[key]);
+						}
+					});
+				}
+				el.appendChild(children);
+				break;
+			default:
+				content = document.createElement("div");
+				content.textContent = `${data.type}: ${data.value}`;
+				parent.appendChild(content);
 		}
-		el.appendChild(data);
 	}
-	parent.appendChild(el);
 }
 
 eNbtFileInput.addEventListener("change", nbtFileInput, false);
