@@ -15,6 +15,7 @@
 
 <label for="nbt-file"> Load NBT File </label>
 <input type="file" id="nbt-file" name="NBT file" accept=".dat,.nbt">
+<button onclick="nbtSave()"> Save </button>
 
 <style>
 	#nbt-viewer {
@@ -28,10 +29,11 @@
 		margin-left: 2em;
 		clip-path: rect(0 100% 0% 0);
 		transition: 0.2s ease clip-path;
+		grid-area: 1 span / 3 span;
 	}
 	#nbt-viewer .compound-children, #nbt-viewer {
 		display: grid;
-		grid-template-columns: min-content 1fr;
+		grid-template-columns: min-content min-content 1fr;
 	}
 </style>
 
