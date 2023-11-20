@@ -3,6 +3,80 @@
 
 <title> NBT Editor </title>
 
+<style>
+	:root {
+		--bg: #222;
+		--bgl: #333;
+		--bgll: #444;
+		--bglll: #555;
+		--bgllll: #666;
+		--bglllll: #777;
+		--bgllllll: #888;
+		--fg: #fff;
+	}
+	body {
+		background-color: var(--bg);
+		color: var(--fg);
+		overflow-y: scroll;
+	}
+	#nbt-viewer {
+		width: 100%;
+	}
+	#nbt-viewer .title {
+		display: inline-block;
+		width: 10ch;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	#nbt-viewer .compound {
+		grid-area: 1 span / 3 span;
+	}
+		#nbt-viewer .arrow:before {
+			display: inline-block;
+			content: "";
+			width: 1ch;
+			height: 1ch;
+			margin: 2px;
+			text-align: center;
+			line-height: 100%;
+			background-color: currentColor;
+			clip-path: polygon(0% 0%, 100% 50%, 0% 100%); 
+			transform: rotate(0deg);
+			transition: 0.2s transform ease;
+		}
+			#nbt-viewer .arrow.open:before {
+				transform: rotate(90deg);
+			}
+		#nbt-viewer .compound-children {
+			padding-left: 2em;
+			clip-path: rect(0 100% 0% 0);
+			transition: 0.2s ease clip-path;
+			grid-area: 1 span / 3 span;
+			background-color: var(--bg);
+			padding: 2vmin;
+			border-radius: 2vmin;
+		}
+			#nbt-viewer .compound-children[depth="0"] { background-color: var(--bgl) }
+			#nbt-viewer .compound-children[depth="1"] { background-color: var(--bgll) }
+			#nbt-viewer .compound-children[depth="2"] { background-color: var(--bglll) }
+			#nbt-viewer .compound-children[depth="3"] { background-color: var(--bgllll) }
+			#nbt-viewer .compound-children[depth="4"] { background-color: var(--bglllll) }
+			#nbt-viewer .compound-children[depth="5"] { background-color: var(--bgllllll) }
+		#nbt-viewer .compound-children, #nbt-viewer {
+			display: grid;
+			grid-row-gap: 1vmin;
+			grid-column-gap: 0.5vmin;
+			grid-template-columns: 1fr min-content 3fr;
+		}
+			#nbt-viewer .list-children {
+				grid-template-columns: min-content 1fr;
+			}
+			#nbt-viewer .compound-children > *, #nbt-viewer > * {
+				display: contents;
+			}
+</style>
+
 <script src="https://unpkg.com/fflate@0.8.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.0/umd/index.js"></script>
 <script>
@@ -17,24 +91,6 @@
 <input type="file" id="nbt-file" name="NBT file" accept=".dat,.nbt">
 <button onclick="nbtSave()"> Save </button>
 
-<style>
-	#nbt-viewer {
-		width: 100%;
-	}
-	#nbt-viewer .title {
-		display: inline-block;
-		width: 10ch;
-	}
-	#nbt-viewer .compound-children {
-		margin-left: 2em;
-		clip-path: rect(0 100% 0% 0);
-		transition: 0.2s ease clip-path;
-		grid-area: 1 span / 3 span;
-	}
-	#nbt-viewer .compound-children, #nbt-viewer {
-		display: grid;
-		grid-template-columns: min-content min-content 1fr;
-	}
-</style>
+<br><br>
 
 <div id="nbt-viewer"></div>

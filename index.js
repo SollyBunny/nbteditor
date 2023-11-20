@@ -49,50 +49,26 @@ async function nbtFileInput(event) {
 	data = await nbtParseData(data);
 	nbtData = data;
 	for (const key in data.value) {
-		nbtViewerConstruct(eNbtViewer, key, data.value[key]);
+		const el = document.createElement("div");
+		nbtViewerConstruct(el, key, data.value[key], 0);
+		eNbtViewer.appendChild(el);
 	}
 }
 
-async function nbtViewerConstruct(parent, name, data) {
-	{
-		const title = document.createElement("div");
-		title.classList.add("title");
-		title.textContent = name;
-		parent.appendChild(title);
-		if (data.type === "compound") {
-			const content = document.createElement("div");
-			content.textContent = "Click to drop down";
-			const button = document.createElement("button");
-			button.textContent = "Drop Down";
-			const children = document.createElement("div");
-			children.classList.add("compound-children");
-			button.addEventListener("click", event => {
-				if (event.target.isInit !== true) {
-					event.target.isInit = true;
-					event.target.isOpen = false;
-					for (const key in data.value) {
-						nbtViewerConstruct(children, key, data.value[key]);
-					}
-				}
-				if (event.target.isOpen === false) {
-					event.target.isOpen = true;
-					children.style.display = "block";
-					children.style.clipPath = "rect(0 100% 100% 0)";
-				} else {
-					event.target.isOpen = false;
-					children.style.clipPath = "rect(0 100% 0% 0)";
-					window.setTimeout(() => {
-						children.style.display = "none";
-					}, 200);
-				}
-			});
-			content.appendChild(button);
-			parent.appendChild(content);
-			parent.appendChild(children);
-			return;
-		} else {
+async function nbtViewerConstruct(parent, name, data, depth, hideTypes) {
+	parent.innerHTML = "";
+	let title;
+	if (data.type !== "compound") {
+		{
+			title = document.createElement("div");
+			title.classList.add("title");
+			title.textContent = name;
+			title.title = name;
+			parent.appendChild(title);
+		}
+		if (hideTypes !== true) {
 			const types = document.createElement("select");
-			for (let typeName of ["byte", "short", "int", "long", "float", "double", "string"]) {
+			for (let typeName of ["byte", "short", "int", "long", "float", "double", "string", "byteArray", "list", "compound"]) {
 				const type = document.createElement("option");
 				type.value = typeName;
 				type.textContent = typeName;
@@ -100,101 +76,181 @@ async function nbtViewerConstruct(parent, name, data) {
 			}
 			types.addEventListener("input", event => {
 				data.type = event.target.value;
+				nbtViewerConstruct(parent, name, data, depth);
 			});
-			types.value = data.type;
+			if (data.type === "list")
+				types.value = data.value.type;
+			else
+				types.value = data.type;
 			parent.appendChild(types);
 		}
 	}
-	{
-		let content;
-		switch (data.type) {
-			case "byte": {
-				content = document.createElement("div");
-				const edit = document.createElement("input");
-				edit.type = "number"
-				edit.min = "-128";
-				edit.max = "127";
-				edit.step = "1";
-				edit.value = data.value;
-				edit.addEventListener("input", event => {
-					data.value = parseInt(event.target.value) || 0;
-				});
-				content.appendChild(edit);
-				parent.appendChild(content);
-				break;
-			} case "short": {
-				content = document.createElement("div");
-				const edit = document.createElement("input");
-				edit.type = "number"
-				edit.min = "-32768";
-				edit.max = "32767";
-				edit.step = "1";
-				edit.value = data.value;
-				edit.addEventListener("input", event => {
-					data.value = parseInt(event.target.value) || 0;
-				});
-				content.appendChild(edit);
-				parent.appendChild(content);
-				break;
-			} case "int": {
-				content = document.createElement("div");
-				const edit = document.createElement("input");
-				edit.type = "number"
-				edit.min = "-2147483648";
-				edit.max = "2147483647";
-				edit.step = "1";
-				edit.value = data.value;
-				edit.addEventListener("input", event => {
-					data.value = parseInt(event.target.value) || 0;
-				});
-				content.appendChild(edit);
-				parent.appendChild(content);
-				break;
-			} case "long": {
-				content = document.createElement("div");
-				const edit = document.createElement("input");
-				edit.type = "string"
-				edit.value = (BigInt(data.value[0] >>> 0) << 32n) + BigInt(data.value[1] >>> 0);
-				edit.addEventListener("input", event => {
-					event.target.value = event.target.value.replace(/[^\-0-9]/g, "");
-					const val = BigInt(event.target.value);
-					const mask = 1n << 32n;
-					const val1 = (val / mask) & (mask - 1n);
-					const val2 = (val % mask) & (mask - 1n);
-					data.value[0] = parseInt(val1);
-					data.value[1] = parseInt(val2);
-					event.target.value = (val1 << 32n) + val2;
-				});
-				content.appendChild(edit);
-				parent.appendChild(content);
-				break;
-			} case "float": case "double": {
-				content = document.createElement("div");
-				const edit = document.createElement("input");
-				edit.type = "number"
-				edit.value = data.value;
-				edit.addEventListener("input", event => {
-					data.value = parseFloat(event.target.value);
-				});
-				content.appendChild(edit);
-				parent.appendChild(content);
-				break;
-			} case "string": {
-				content = document.createElement("div");
-				const edit = document.createElement("input");
-				edit.value = data.value;
-				edit.addEventListener("input", event => {
-					data.value = event.target.value;
-				});
-				content.appendChild(edit);
-				parent.appendChild(content);
-				break;
-			}
-			default:
-				content = document.createElement("div");
-				content.textContent = `${data.type}: ${data.value}`;
-				parent.appendChild(content);
+	switch (data.type) {
+		case "byte": {
+			const edit = document.createElement("input");
+			edit.type = "number"
+			edit.min = "-128";
+			edit.max = "127";
+			edit.step = "1";
+			edit.value = data.value;
+			edit.addEventListener("input", event => {
+				data.value = parseInt(event.target.value) || 0;
+			});
+			parent.appendChild(edit);
+			break;
+		} case "short": {
+			const edit = document.createElement("input");
+			edit.type = "number"
+			edit.min = "-32768";
+			edit.max = "32767";
+			edit.step = "1";
+			edit.value = data.value;
+			edit.addEventListener("input", event => {
+				data.value = parseInt(event.target.value) || 0;
+			});
+			parent.appendChild(edit);
+			break;
+		} case "int": {
+			const edit = document.createElement("input");
+			edit.type = "number"
+			edit.min = "-2147483648";
+			edit.max = "2147483647";
+			edit.step = "1";
+			edit.value = data.value;
+			edit.addEventListener("input", event => {
+				data.value = parseInt(event.target.value) || 0;
+			});
+			parent.appendChild(edit);
+			break;
+		} case "long": {
+			const edit = document.createElement("input");
+			edit.type = "string"
+			edit.value = (BigInt(data.value[0] >>> 0) << 32n) + BigInt(data.value[1] >>> 0);
+			edit.addEventListener("input", event => {
+				event.target.value = event.target.value.replace(/[^\-0-9]/g, "");
+				const val = BigInt(event.target.value);
+				const mask = 1n << 32n;
+				const val1 = (val / mask) & (mask - 1n);
+				const val2 = (val % mask) & (mask - 1n);
+				data.value[0] = parseInt(val1);
+				data.value[1] = parseInt(val2);
+				event.target.value = (val1 << 32n) + val2;
+			});
+			parent.appendChild(edit);
+			break;
+		} case "float": case "double": {
+			const edit = document.createElement("input");
+			edit.type = "number"
+			edit.value = data.value;
+			edit.addEventListener("input", event => {
+				data.value = parseFloat(event.target.value);
+			});
+			parent.appendChild(edit);
+			break;
+		} case "string": {
+			const edit = document.createElement("textarea");
+			edit.textContent = data.value;
+			edit.addEventListener("input", event => {
+				data.value = event.target.value;
+			});
+			parent.appendChild(edit);
+			break;
+		} case "byteArray": {
+			const edit = document.createElement("textarea");
+			edit.textContent = data.value;
+			edit.addEventListener("input", event => {
+				data.value = event.target.value.split(",");
+			});
+			parent.appendChild(edit);
+			break;
+		} case "compound": {
+			const content = document.createElement("div");
+			content.classList.add("compound");
+			content.classList.add("arrow");
+			content.textContent = name;
+			content.title = name;
+			const children = document.createElement("div");
+			children.classList.add("compound-children");
+			children.setAttribute("depth", depth);
+			children.style.display = "none";
+			content.addEventListener("click", event => {
+				if (event.target.isInit !== true) {
+					event.target.isInit = true;
+					event.target.isOpen = false;
+					for (const key in data.value) {
+						const el = document.createElement("div");
+						nbtViewerConstruct(el, key, data.value[key], depth + 1);
+						children.appendChild(el);
+					}
+				}
+				if (event.target.isOpen === false) {
+					event.target.isOpen = true;
+					content.classList.add("open");
+					children.style.display = "grid";
+					window.setTimeout(() => {
+						children.style.clipPath = "rect(0 100% 100% 0)";
+					}, 2);
+				} else {
+					event.target.isOpen = false;
+					content.classList.remove("open");
+					children.style.clipPath = "rect(0 100% 0% 0)";
+					window.setTimeout(() => {
+						children.style.display = "none";
+					}, 200);
+				}
+			});
+			parent.appendChild(content);
+			parent.appendChild(children);
+			break;
+		} case "list": {
+			title.classList.add("arrow");
+			const children = document.createElement("div");
+			children.classList.add("compound-children");
+			children.classList.add("list-children");
+			children.setAttribute("depth", depth);
+			children.style.display = "none";
+			console.log(data, data.value.type)
+			title.addEventListener("click", event => {
+				if (event.target.isInit !== true) {
+					event.target.isInit = true;
+					event.target.isOpen = false;
+					for (let key = 0; key < data.value.value.length; ++key) {
+						const el = document.createElement("div");
+						nbtViewerConstruct(
+							el, key, {
+								type: data.value.type,
+								value: data.value.value[key],
+							}, 
+							depth + 1, true
+						);
+						children.appendChild(el);
+					}
+				}
+				if (event.target.isOpen === false) {
+					event.target.isOpen = true;
+					title.classList.add("open");
+					children.style.display = "grid";
+					window.setTimeout(() => {
+						children.style.clipPath = "rect(0 100% 100% 0)";
+					}, 2);
+				} else {
+					event.target.isOpen = false;
+					title.classList.remove("open");
+					children.style.clipPath = "rect(0 100% 0% 0)";
+					window.setTimeout(() => {
+						children.style.display = "none";
+					}, 200);
+				}
+			});
+			const dummy = document.createElement("div");
+			parent.appendChild(dummy);
+			parent.appendChild(children);
+			break;
 		}
+		default:
+			const content = document.createElement("div");
+			content.textContent = `${data.type}: ${data.value}`;
+			parent.appendChild(content);
 	}
 }
 
