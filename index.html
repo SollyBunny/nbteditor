@@ -1,0 +1,14 @@
+<script src="https://unpkg.com/fflate@0.8.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/fflate@0.8.0/umd/index.js"></script>
+<script>
+	window.zlib = window.fflate;
+</script>
+
+<script src="nbt.js"></script>
+
+<script defer src="index.js"></script>
+
+<label for="nbt-file"> Load NBT File </label>
+<input type="file" id="nbt-file" name="NBT file" accept=".dat,.nbt">
+
+<div id="nbt-viewer"></div>
